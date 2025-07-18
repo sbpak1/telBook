@@ -46,7 +46,26 @@ public class TelBookService implements CrudInterface {
     @Override
     public int UpdateData(TelDto dto) {
         System.out.println("[Telbookservice,UpdateData]");
-        return 0;
+        int result = 0;
+        try {
+            sql = "UPDATE telbook SET ";
+            sql = sql + "name = ?, ";
+            sql = sql + "age = ?, ";
+            sql = sql + "address = ?, ";
+            sql = sql + "phone = ? ";
+            sql = sql + "WHERE id = ? ";
+            psmt = conn.prepareStatement(sql);
+            psmt.setString(1, dto.getName());
+            psmt.setInt(2, dto.getAge());
+            psmt.setString(3, dto.getAddress());
+            psmt.setString(4, dto.getPhone());
+            psmt.setInt(5, dto.getId());
+            result = psmt.executeUpdate();
+            psmt.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
     }
 
     @Override
@@ -103,12 +122,60 @@ public class TelBookService implements CrudInterface {
     @Override
     public TelDto fidById(int id) {
         System.out.println("Telbookservice,fidById");
+        // id를 받아서 해당 레코드 읽어오는 작업
+        ResultSet rs = null;
+        try {
+            sql = "SELECT id, name, age, address, phone " +
+                   "FROM telbook WHERE id = ?";
+            //System.out.println(sql);
+            psmt = conn.prepareStatement(sql);
+            psmt.setInt(1, id);
+            // 레코드 셋의 자료를 while 로 순회하면서 읽는다
+            rs = psmt.executeQuery();
+            while (rs.next()) {
+                TelDto dto = new TelDto();
+                dto.setId(rs.getInt("id"));
+                dto.setName(rs.getString("name"));
+                dto.setAge(rs.getInt("age"));
+                dto.setAddress(rs.getString("address"));
+                dto.setPhone(rs.getString("phone"));
+                System.out.println(dto.toString());
+                return dto;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
         return null;
     }
 
     @Override
     public List<TelDto> serchList(String keyword) {
         System.out.println("[Telbookservice.serchList]");
-        return List.of();
+        ResultSet rs = null;
+        List<TelDto> dtoList = new ArrayList<>();
+        try {
+            sql = "SELECT id, name, age, address, phone ";
+            sql = sql + " FROM telbook ";
+            sql = sql + " WHERE name like ? ";
+            sql = sql + " ORDER BY name DESC";
+            psmt = conn.prepareStatement(sql);
+            psmt.setString(1, "%" + keyword + "%");
+            rs = psmt.executeQuery();
+            // 돌면서 List<TelDto> 담는다.
+            while (rs.next()) {
+                TelDto dto = new TelDto();
+                dto.setId(rs.getInt("id"));
+                dto.setName(rs.getString("name"));
+                dto.setAge(rs.getInt("age"));
+                dto.setAddress(rs.getString("address"));
+                dto.setPhone(rs.getString("phone"));
+                dtoList.add(dto);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+
+        return dtoList;
     }
 }
